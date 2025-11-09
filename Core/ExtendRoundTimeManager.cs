@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -116,8 +116,22 @@ namespace cs2_rockthevote
 
         private void ShowVoteMenu(CCSPlayerController player)
         {
-            var menu = CreateVoteMenu();
-            MenuManager.OpenChatMenu(player, menu);
+            if (T3MenuBridge.Available)
+            {
+                var opts = new List<(string Label, Action<CCSPlayerController> OnSelect, bool Disabled)>();
+                var answers = new List<string>() { "Yes", "No" };
+                foreach (var answer in answers)
+                {
+                    var captured = answer;
+                    opts.Add((captured, (p) => { ExtendTimeVoted(p, captured); }, false));
+                }
+                T3MenuBridge.OpenMenu(player, _localizer.Localize("extendtime.hud.menu-title"), opts);
+            }
+            else
+            {
+                var menu = CreateVoteMenu();
+                MenuManager.OpenChatMenu(player, menu);
+            }
         }
 
         private ChatMenu CreateVoteMenu()
@@ -257,10 +271,19 @@ namespace cs2_rockthevote
 
             _canVote = ServerManager.ValidPlayerCount();
 
-            var menu = CreateVoteMenu();
-
-            foreach (var player in ServerManager.ValidPlayers())
-                MenuManager.OpenChatMenu(player, menu);
+            if (T3MenuBridge.Available)
+            {
+                foreach (var player in ServerManager.ValidPlayers())
+                {
+                    ShowVoteMenu(player);
+                }
+            }
+            else
+            {
+                var menu = CreateVoteMenu();
+                foreach (var player in ServerManager.ValidPlayers())
+                    MenuManager.OpenChatMenu(player, menu);
+            }
 
             timeLeft = _config.VoteDuration;
             Timer = _plugin!.AddTimer(1.0F, () =>

@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -197,7 +197,19 @@ namespace cs2_rockthevote
 
         public void OpenNominationMenu(CCSPlayerController player)
         {
-            MenuManager.OpenChatMenu(player!, nominationMenu!);
+            if (T3MenuBridge.Available)
+            {
+                var options = _mapLister.Maps!
+                    .Where(x => x.Name != Server.MapName)
+                    .Select(m => (Label: m.Name,
+                                   OnSelect: (Action<CCSPlayerController>)((p) => { Nominate(p, m.Name); }),
+                                   Disabled: _mapCooldown.IsMapInCooldown(m.Name)));
+                T3MenuBridge.OpenMenu(player, "Nomination", options);
+            }
+            else
+            {
+                MenuManager.OpenChatMenu(player!, nominationMenu!);
+            }
         }
 
         void Nominate(CCSPlayerController player, string map)

@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Logging;
@@ -135,10 +135,22 @@ namespace cs2_rockthevote
 
         public void OpenVotemapMenu(CCSPlayerController player)
         {
-            if (_config.HudMenu)
-                MenuManager.OpenCenterHtmlMenu(_plugin!, player, votemapMenuHud!);
+            if (T3MenuBridge.Available)
+            {
+                var options = _mapLister.Maps!
+                    .Where(x => x.Name != Server.MapName)
+                    .Select(m => (Label: m.Name,
+                                   OnSelect: (Action<CCSPlayerController>)((p) => { AddVote(p, m.Name); }),
+                                   Disabled: _mapCooldown.IsMapInCooldown(m.Name)));
+                T3MenuBridge.OpenMenu(player, "Votemap", options);
+            }
             else
-                MenuManager.OpenChatMenu(player, votemapMenu!);
+            {
+                if (_config.HudMenu)
+                    MenuManager.OpenCenterHtmlMenu(_plugin!, player, votemapMenuHud!);
+                else
+                    MenuManager.OpenChatMenu(player, votemapMenu!);
+            }
         }
 
         void AddVote(CCSPlayerController player, string map)

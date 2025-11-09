@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Timers;
@@ -154,8 +154,33 @@ namespace cs2_rockthevote
 
         private void ShowMapVoteMenu(CCSPlayerController player)
         {
-            var menu = CreateMapVoteMenu();
-            MenuManager.OpenChatMenu(player, menu);
+            if (T3MenuBridge.Available)
+            {
+                var opts = new List<(string Label, Action<CCSPlayerController> OnSelect, bool Disabled)>();
+
+                if (_eomConfig != null && _eomConfig.AllowExtend && (_eomConfig.ExtendLimit > 0 || _eomConfig.ExtendLimit == -1))
+                {
+                    var extendLabel = _localizer.Localize("general.extend-current-map");
+                    opts.Add((extendLabel, (p) => { MapVoted(p, extendLabel); }, false));
+                }
+
+                int mapsToShow = _config!.MapsToShow == 0 ? MAX_OPTIONS_HUD_MENU : _config!.MapsToShow;
+                if (_config.HudMenu && mapsToShow > MAX_OPTIONS_HUD_MENU)
+                    mapsToShow = MAX_OPTIONS_HUD_MENU;
+
+                foreach (var map in mapsEllected.Take((_eomConfig != null && _eomConfig.AllowExtend && (_eomConfig.ExtendLimit > 0 || _eomConfig.ExtendLimit == -1)) ? (mapsToShow - 1) : mapsToShow))
+                {
+                    var captured = map;
+                    opts.Add((captured, (p) => { MapVoted(p, captured); }, false));
+                }
+
+                T3MenuBridge.OpenMenu(player, _localizer.Localize("emv.hud.menu-title"), opts);
+            }
+            else
+            {
+                var menu = CreateMapVoteMenu();
+                MenuManager.OpenChatMenu(player, menu);
+            }
         }
 
         private ChatMenu CreateMapVoteMenu()
@@ -414,10 +439,19 @@ namespace cs2_rockthevote
                 mapsEllected = _nominationManager.NominationWinners().Concat(mapsScrambled).Distinct().ToList();
 
                 _canVote = ServerManager.ValidPlayerCount();
-                var menu = CreateMapVoteMenu();
-
-                foreach (var player in ServerManager.ValidPlayers())
-                    MenuManager.OpenChatMenu(player, menu);
+                if (T3MenuBridge.Available)
+                {
+                    foreach (var player in ServerManager.ValidPlayers())
+                    {
+                        ShowMapVoteMenu(player);
+                    }
+                }
+                else
+                {
+                    var menu = CreateMapVoteMenu();
+                    foreach (var player in ServerManager.ValidPlayers())
+                        MenuManager.OpenChatMenu(player, menu);
+                }
 
                 timeLeft = _config.VoteDuration;
 

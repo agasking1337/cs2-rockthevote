@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -9,6 +9,13 @@
 
   <ItemGroup>
      <PackageReference Include="CounterStrikeSharp.API" Version="1.0.335" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="T3MenuSharedApi">
+      <HintPath>3rd_party\T3MenuSharedApi.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
