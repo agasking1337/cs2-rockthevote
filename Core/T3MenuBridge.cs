@@ -55,7 +55,17 @@ namespace cs2_rockthevote
                 }
                 else
                 {
-                    menu.AddOption(opt.Label, (p, o) => { opt.OnSelect(p); });
+                    menu.AddOption(opt.Label, (p, o) => {
+                        opt.OnSelect(p);
+                        try
+                        {
+                            dynamic mgr = _manager!;
+                            // Try common close method names; ignore if unavailable
+                            try { mgr.CloseMenu(p); }
+                            catch { try { mgr.Close(p); } catch { } }
+                        }
+                        catch { }
+                    });
                 }
             }
             _manager.OpenMainMenu(player, menu);
